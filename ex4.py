@@ -1,10 +1,12 @@
 # Avihai Mordechay 318341278, Omer Zamir 208552620
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
+from sklearn.decomposition import PCA
 
 
 def process_data():
@@ -58,6 +60,10 @@ def cross_validation(X, y):
     print("Cross Validation Scores (K-Fold):", scores)
     # Calculate average accuracy
     avg_accuracy = np.mean(scores)
+
+    # Plot decision boundary with PCA
+    plot_decision_boundary_with_pca(X, y)
+
     return avg_accuracy
 
 
@@ -85,6 +91,8 @@ def random_split(X, y):
         # Calculate accuracy
         accuracy = accuracy_score(y_test, y_pred)
         accuracies.append(accuracy)
+
+
 
     print("Random Split Accuracies:", accuracies)
     avg_accuracy = np.mean(accuracies)
@@ -138,6 +146,90 @@ def adaboost(X, y, n_estimators=5):
     # Calculate accuracy
     accuracy = np.mean(final_predictions == y)
     return accuracy
+
+
+# Graphs:
+def plot_decision_boundary_with_pca(X, y):
+    """
+    Applies PCA to reduce features to 2 dimensions and plots the data points and decision boundary of a logistic regression model.
+
+    Args:
+        X (numpy.ndarray): Feature matrix.
+        y (numpy.ndarray): Target labels.
+    """
+    # Apply PCA to reduce the features to 2 dimensions
+    pca = PCA(n_components=2)
+    X_pca = pca.fit_transform(X)
+
+    # Initialize the logistic regression model
+    model = LogisticRegression(max_iter=1000)
+    model.fit(X_pca, y)
+
+    plt.figure(figsize=(10, 6))
+
+    # Plot the data points
+    scatter = plt.scatter(X_pca[:, 0], X_pca[:, 1], c=y, cmap=plt.cm.bwr, edgecolors='k')
+    plt.xlabel('Principal Component 1')
+    plt.ylabel('Principal Component 2')
+    plt.title('Data Points and Decision Boundary with PCA')
+    plt.legend(handles=scatter.legend_elements()[0], labels=['Class 0', 'Class 1'])
+
+    # Plot the decision boundary
+    x_min, x_max = X_pca[:, 0].min() - 1, X_pca[:, 0].max() + 1
+    y_min, y_max = X_pca[:, 1].min() - 1, X_pca[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 100),
+                         np.linspace(y_min, y_max, 100))
+    Z = model.predict(np.c_[xx.ravel(), yy.ravel()])
+    Z = Z.reshape(xx.shape)
+    plt.contourf(xx, yy, Z, alpha=0.3, cmap=plt.cm.bwr)
+
+    plt.show()
+
+
+def plot_decision_boundary_random_split(X_train, y_train, X_test, y_test):
+    """
+    Applies PCA to reduce features to 2 dimensions and plots the data points and decision boundary
+    of a logistic regression model trained on the training data and tested on the test data.
+
+    Args:
+        X_train (numpy.ndarray): Training feature matrix.
+        y_train (numpy.ndarray): Training target labels.
+        X_test (numpy.ndarray): Test feature matrix.
+        y_test (numpy.ndarray): Test target labels.
+    """
+    # Apply PCA to reduce the features to 2 dimensions
+    pca = PCA(n_components=2)
+    X_train_pca = pca.fit_transform(X_train)
+    X_test_pca = pca.transform(X_test)
+
+    # Initialize the logistic regression model
+    model = LogisticRegression(max_iter=1000)
+    model.fit(X_train_pca, y_train)
+
+    plt.figure(figsize=(10, 6))
+
+    # Plot the training data points
+    scatter_train = plt.scatter(X_train_pca[:, 0], X_train_pca[:, 1], c=y_train, cmap=plt.cm.bwr, edgecolors='k',
+                                marker='o', label='Train')
+    # Plot the test data points
+    scatter_test = plt.scatter(X_test_pca[:, 0], X_test_pca[:, 1], c=y_test, cmap=plt.cm.bwr, edgecolors='k',
+                               marker='x', label='Test')
+    plt.xlabel('Principal Component 1')
+    plt.ylabel('Principal Component 2')
+    plt.title('Data Points and Decision Boundary with PCA (Train/Test Split)')
+    plt.legend(handles=[scatter_train, scatter_test],
+               labels=['Train Class 0', 'Train Class 1', 'Test Class 0', 'Test Class 1'])
+
+    # Plot the decision boundary
+    x_min, x_max = X_train_pca[:, 0].min() - 1, X_train_pca[:, 0].max() + 1
+    y_min, y_max = X_train_pca[:, 1].min() - 1, X_train_pca[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 100),
+                         np.linspace(y_min, y_max, 100))
+    Z = model.predict(np.c_[xx.ravel(), yy.ravel()])
+    Z = Z.reshape(xx.shape)
+    plt.contourf(xx, yy, Z, alpha=0.3, cmap=plt.cm.bwr)
+
+    plt.show()
 
 
 if __name__ == "__main__":
