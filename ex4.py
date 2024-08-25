@@ -61,8 +61,7 @@ def cross_validation(X, y):
     # Calculate average accuracy
     avg_accuracy = np.mean(scores)
 
-    # Plot decision boundary with PCA
-    plot_decision_boundary_with_pca(X, y)
+    plot_accuracy(scores, 'Cross-Validation Accuracy Scores')
 
     return avg_accuracy
 
@@ -92,7 +91,7 @@ def random_split(X, y):
         accuracy = accuracy_score(y_test, y_pred)
         accuracies.append(accuracy)
 
-
+    plot_accuracy(np.array(accuracies), 'Random (50%) Accuracy Scores')
 
     print("Random Split Accuracies:", accuracies)
     avg_accuracy = np.mean(accuracies)
@@ -151,7 +150,8 @@ def adaboost(X, y, n_estimators=5):
 # Graphs:
 def plot_decision_boundary_with_pca(X, y):
     """
-    Applies PCA to reduce features to 2 dimensions and plots the data points and decision boundary of a logistic regression model.
+    Applies PCA to reduce features to 2 dimensions and plots the data points and decision boundary of a logistic regression model,
+    with accuracy displayed on the plot.
 
     Args:
         X (numpy.ndarray): Feature matrix.
@@ -161,18 +161,21 @@ def plot_decision_boundary_with_pca(X, y):
     pca = PCA(n_components=2)
     X_pca = pca.fit_transform(X)
 
-    # Initialize the logistic regression model
+    # Initialize and train the logistic regression model
     model = LogisticRegression(max_iter=1000)
     model.fit(X_pca, y)
+
+    # Calculate the accuracy
+    accuracy = accuracy_score(y, model.predict(X_pca))
 
     plt.figure(figsize=(10, 6))
 
     # Plot the data points
     scatter = plt.scatter(X_pca[:, 0], X_pca[:, 1], c=y, cmap=plt.cm.bwr, edgecolors='k')
-    plt.xlabel('Principal Component 1')
-    plt.ylabel('Principal Component 2')
-    plt.title('Data Points and Decision Boundary with PCA')
-    plt.legend(handles=scatter.legend_elements()[0], labels=['Class 0', 'Class 1'])
+    plt.xlabel('Component 1')
+    plt.ylabel('Component 2')
+    plt.title('32561 people in the United States\nReducing 14 features to 2 features by using PCA')
+    plt.legend(handles=scatter.legend_elements()[0], labels=['Under 50K', 'Over 50K'])
 
     # Plot the decision boundary
     x_min, x_max = X_pca[:, 0].min() - 1, X_pca[:, 0].max() + 1
@@ -183,58 +186,44 @@ def plot_decision_boundary_with_pca(X, y):
     Z = Z.reshape(xx.shape)
     plt.contourf(xx, yy, Z, alpha=0.3, cmap=plt.cm.bwr)
 
+    # Display the accuracy on the plot
+    plt.text(x_max - 0.5, y_min + 0.5, f'Accuracy: {accuracy:.2f}',
+             horizontalalignment='right', fontsize=12, bbox=dict(facecolor='white', alpha=0.6))
+
     plt.show()
 
 
-def plot_decision_boundary_random_split(X_train, y_train, X_test, y_test):
+def plot_accuracy(scores, title):
     """
-    Applies PCA to reduce features to 2 dimensions and plots the data points and decision boundary
-    of a logistic regression model trained on the training data and tested on the test data.
+    Plots the cross-validation or random split scores.
 
     Args:
-        X_train (numpy.ndarray): Training feature matrix.
-        y_train (numpy.ndarray): Training target labels.
-        X_test (numpy.ndarray): Test feature matrix.
-        y_test (numpy.ndarray): Test target labels.
+        scores (numpy.ndarray): Accuracy scores.
+        title (str): Title of the plot.
     """
-    # Apply PCA to reduce the features to 2 dimensions
-    pca = PCA(n_components=2)
-    X_train_pca = pca.fit_transform(X_train)
-    X_test_pca = pca.transform(X_test)
+    plt.figure(figsize=(8, 5))
 
-    # Initialize the logistic regression model
-    model = LogisticRegression(max_iter=1000)
-    model.fit(X_train_pca, y_train)
+    # Plot the scores with more digits after the decimal point
+    plt.plot(range(1, len(scores) + 1), scores, marker='o', linestyle='-', color='b')
 
-    plt.figure(figsize=(10, 6))
+    # Add text annotations with more digits
+    for i, score in enumerate(scores):
+        plt.text(i + 1, score, f'{score:.5f}', ha='center', va='bottom')
 
-    # Plot the training data points
-    scatter_train = plt.scatter(X_train_pca[:, 0], X_train_pca[:, 1], c=y_train, cmap=plt.cm.bwr, edgecolors='k',
-                                marker='o', label='Train')
-    # Plot the test data points
-    scatter_test = plt.scatter(X_test_pca[:, 0], X_test_pca[:, 1], c=y_test, cmap=plt.cm.bwr, edgecolors='k',
-                               marker='x', label='Test')
-    plt.xlabel('Principal Component 1')
-    plt.ylabel('Principal Component 2')
-    plt.title('Data Points and Decision Boundary with PCA (Train/Test Split)')
-    plt.legend(handles=[scatter_train, scatter_test],
-               labels=['Train Class 0', 'Train Class 1', 'Test Class 0', 'Test Class 1'])
-
-    # Plot the decision boundary
-    x_min, x_max = X_train_pca[:, 0].min() - 1, X_train_pca[:, 0].max() + 1
-    y_min, y_max = X_train_pca[:, 1].min() - 1, X_train_pca[:, 1].max() + 1
-    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 100),
-                         np.linspace(y_min, y_max, 100))
-    Z = model.predict(np.c_[xx.ravel(), yy.ravel()])
-    Z = Z.reshape(xx.shape)
-    plt.contourf(xx, yy, Z, alpha=0.3, cmap=plt.cm.bwr)
-
+    plt.xlabel('Fold')
+    plt.ylabel('Accuracy')
+    plt.title(title)
+    plt.ylim(0.8, 0.9)  # Adjust the limits to zoom in on relevant values
+    plt.grid(True)
     plt.show()
 
 
 if __name__ == "__main__":
     # Process the data
     X, y = process_data()
+
+    # Plot decision boundary with PCA
+    plot_decision_boundary_with_pca(X, y)
 
     # Perform Cross Validation
     avg_accuracy_cv = cross_validation(X, y)
