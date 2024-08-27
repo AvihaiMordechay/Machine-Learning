@@ -222,9 +222,6 @@ if __name__ == "__main__":
     # Process the data
     X, y = process_data()
 
-    # Plot decision boundary with PCA
-    plot_decision_boundary_with_pca(X, y)
-
     # Perform Cross Validation
     avg_accuracy_cv = cross_validation(X, y)
     print(f"Average accuracy from Cross Validation (K-Fold): {avg_accuracy_cv:.5f}")
@@ -236,3 +233,6 @@ if __name__ == "__main__":
     # Perform AdaBoost with Logistic Regression
     ada_accuracy = adaboost(X, y, n_estimators=5)
     print(f"Accuracy from AdaBoost with Logistic Regression: {ada_accuracy:.5f}")
+
+    # Plot decision boundary with PCA
+    plot_decision_boundary_with_pca(X, y)
