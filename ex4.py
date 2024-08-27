@@ -4,9 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.decomposition import PCA
+from sklearn.tree import DecisionTreeClassifier
 
 
 def process_data():
@@ -47,17 +47,18 @@ def process_data():
 # Part 1:
 def cross_validation(X, y):
     """
-     Performs 5-fold cross-validation with logistic regression.
+    Performs 5-fold cross-validation with a decision tree classifier.
 
-     Returns:
-         float: Average accuracy score.
-     """
-    # Initialize the logistic regression model
-    model = LogisticRegression(max_iter=1000)
+    Returns:
+        float: Average accuracy score.
+    """
+    # Initialize the decision tree classifier
+    model = DecisionTreeClassifier()
 
     # Perform cross-validation
     scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')
     print("Cross Validation Scores (K-Fold):", scores)
+    
     # Calculate average accuracy
     avg_accuracy = np.mean(scores)
 
@@ -69,19 +70,19 @@ def cross_validation(X, y):
 # Part 2:
 def random_split(X, y):
     """
-       Evaluates logistic regression with 5 random 50% train/test splits.
+    Evaluates decision tree classifier with 5 random 50% train/test splits.
 
-       Returns:
-           float: Average accuracy score.
-       """
+    Returns:
+        float: Average accuracy score.
+    """
     accuracies = []
 
     for _ in range(5):  # Repeat 5 times
         # Randomly split the data into train and test (50% each)
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=None)
 
-        # Initialize and train the logistic regression model
-        model = LogisticRegression(max_iter=1000)
+        # Initialize and train the decision tree classifier
+        model = DecisionTreeClassifier()
         model.fit(X_train, y_train)
 
         # Make predictions on the test set
@@ -98,13 +99,14 @@ def random_split(X, y):
     return avg_accuracy
 
 
-# Part 3:
-def adaboost(X, y, n_estimators=5):
+# part 3 
+def adaboost(X, y, n_estimators=50, max_depth=5):
     """
-    Trains an AdaBoost ensemble of logistic regression models.
+    Trains an AdaBoost ensemble of decision tree classifiers with tunable max_depth.
 
     Args:
         n_estimators (int): Number of base models.
+        max_depth (int): Maximum depth of the decision trees.
 
     Returns:
         float: Accuracy score.
@@ -116,9 +118,9 @@ def adaboost(X, y, n_estimators=5):
     weights = np.ones(n_samples) / n_samples
     models = []
     alphas = []
-    for _ in range(n_estimators):
-        # Initialize a logistic regression model
-        model = LogisticRegression(max_iter=1000)
+    for i in range(n_estimators):
+        # Use a weak decision tree classifier
+        model = DecisionTreeClassifier(max_depth=7)
         model.fit(X, y, sample_weight=weights)
         predictions = model.predict(X)
 
@@ -134,6 +136,9 @@ def adaboost(X, y, n_estimators=5):
         weights *= np.exp(alpha * (predictions != y))
         weights /= np.sum(weights)
 
+        # Calculate accuracy for the current model
+        accuracy = np.mean(np.sign(predictions) == y)
+    
     # Make predictions with the final model
     final_predictions = np.zeros(n_samples)
     for model, alpha in zip(models, alphas):
@@ -142,15 +147,16 @@ def adaboost(X, y, n_estimators=5):
     # Sign function to convert predictions to binary labels
     final_predictions = np.sign(final_predictions)
 
-    # Calculate accuracy
+    # Calculate accuracy of the final ensemble model
     accuracy = np.mean(final_predictions == y)
+    
     return accuracy
 
 
 # Graphs:
 def plot_decision_boundary_with_pca(X, y):
     """
-    Applies PCA to reduce features to 2 dimensions and plots the data points and decision boundary of a logistic regression model,
+    Applies PCA to reduce features to 2 dimensions and plots the data points and decision boundary of a decision tree classifier,
     with accuracy displayed on the plot.
 
     Args:
@@ -161,8 +167,8 @@ def plot_decision_boundary_with_pca(X, y):
     pca = PCA(n_components=2)
     X_pca = pca.fit_transform(X)
 
-    # Initialize and train the logistic regression model
-    model = LogisticRegression(max_iter=1000)
+    # Initialize and train the decision tree classifier
+    model = DecisionTreeClassifier()
     model.fit(X_pca, y)
 
     # Calculate the accuracy
@@ -233,6 +239,6 @@ if __name__ == "__main__":
     avg_accuracy_random_split = random_split(X, y)
     print(f"Average accuracy from Random 50% Split: {avg_accuracy_random_split:.5f}")
 
-    # Perform AdaBoost with Logistic Regression
-    ada_accuracy = adaboost(X, y, n_estimators=5)
-    print(f"Accuracy from AdaBoost with Logistic Regression: {ada_accuracy:.5f}")
+    # Perform AdaBoost with Decision Tree
+    ada_accuracy = adaboost(X, y, n_estimators=200)
+    print(f"Accuracy from AdaBoost with Decision Tree: {ada_accuracy:.5f}")
