@@ -59,7 +59,7 @@ def cross_validation(X, y):
     # Initialize the decision tree classifier
     model = DecisionTreeClassifier()
 
-    # Perform 5-fold cross-validation
+    # Perform k-fold cross-validation
     scores = cross_val_score(model, X, y, cv=5, scoring='accuracy')
     print("Cross Validation Scores (K-Fold):", scores)
     
@@ -182,19 +182,6 @@ def plot_decision_boundary_with_pca(X, y):
     plt.ylabel('Component 2')
     plt.title('32561 people in the United States\nReducing 14 features to 2 features by using PCA')
     plt.legend(handles=scatter.legend_elements()[0], labels=['Under 50K', 'Over 50K'])
-
-    # Plot decision boundary
-    x_min, x_max = X_pca[:, 0].min() - 1, X_pca[:, 0].max() + 1
-    y_min, y_max = X_pca[:, 1].min() - 1, X_pca[:, 1].max() + 1
-    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 100),
-                         np.linspace(y_min, y_max, 100))
-    Z = model.predict(np.c_[xx.ravel(), yy.ravel()])
-    Z = Z.reshape(xx.shape)
-    plt.contourf(xx, yy, Z, alpha=0.3, cmap=plt.cm.bwr)
-
-    # Display accuracy on the plot
-    plt.text(x_max - 0.5, y_min + 0.5, f'Accuracy: {accuracy:.2f}',
-             horizontalalignment='right', fontsize=12, bbox=dict(facecolor='white', alpha=0.6))
 
     plt.show()
 
